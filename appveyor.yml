@@ -7,6 +7,23 @@ image: Visual Studio 2022
 configuration: Release
 platform: x64
 clone_folder: c:\projects\kdu
+before_build:
+  - nuget restore
 build:
   project: Source/kdu.sln
   verbosity: normal
+after_build:
+  - ps: .\publish_artifacts.ps1
+artifacts:
+  - path: bin\Release\*.*
+    name: kdu_binaries
+deploy:
+  - provider: GitHub
+    auth_token:
+      secure: ${GITHUB_TOKEN}
+    draft: true
+    prerelease: false
+    on:
+      branch: master
+      appveyor_repo_tag: true
+    script: .\create_release.ps1
