@@ -13,7 +13,15 @@ build:
   project: Source/kdu.sln
   verbosity: normal
 after_build:
-  - ps: .\publish_artifacts.ps1
+  - ps: |
+      $releaseFolder = "c:\temp\release"
+      New-Item -ItemType Directory -Force -Path $releaseFolder
+      
+      Copy-Item "bin\Release\*.*" -Destination $releaseFolder -Recurse
+      
+      Compress-Archive -Path "$releaseFolder\*" -CompressionLevel Optimal -DestinationPath "$(Split-Path $MyInvocation.MyCommand.Path)\kdu-release.zip"
+      
+      Remove-Item $releaseFolder -Force -Recurse
 artifacts:
   - path: bin\Release\*.*
     name: kdu_binaries
@@ -26,4 +34,28 @@ deploy:
     on:
       branch: master
       appveyor_repo_tag: true
-    script: .\create_release.ps1
+    script: |
+      $token = $env:GITHUB_TOKEN
+      $repo = "dimbox-idk/KDU"
+      $tag = "v$(appveyor_build_version)"
+      
+      Write-Host "Creating release for tag $tag..."
+      
+      $body = @{
+          tag_name = $tag;
+          target_commitish = "master";
+          name = "$tag Release";
+          body = "Release notes for version $tag.";
+          draft = $false;
+          prerelease = $true;
+      } | ConvertTo-Json
+      
+      try {
+          $uri = "https://api.github.com/repos/$repo/releases"
+          $headers = @{ Authorization = "token $token"; Accept = "application/vnd.github.v3+json" }
+          
+          Invoke-RestMethod -Uri $uri -Headers $headers -Body $body -Method Post -ContentType 'application/json'
+          Write-Host "Release created successfully."
+      } catch {
+          Write-Error "Failed to create release: $_"
+      }
