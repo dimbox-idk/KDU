@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/pxpwehogor7x4mqa?svg=true)](https://ci.appveyor.com/project/hfiref0x/kdu)
+[![Build status](https://ci.appveyor.com/api/projects/status/pxpwehogor7x4mqa?svg=true)](https://ci.appveyor.com/project/dimbox-idk/kdu)
 
 # KDU
 ## Kernel Driver Utility
